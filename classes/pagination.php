@@ -23,11 +23,23 @@ class Pagination_Core {
 	protected $prev_page;
 	protected $next_page;
 
+	/**
+	 * Creates a new Pagination object.
+	 *
+	 * @param   array  configuration
+	 * @return  Pagination
+	 */
 	public static function factory(array $config = array())
 	{
 		return new Pagination($config);
 	}
 
+	/**
+	 * Creates a new Pagination object.
+	 *
+	 * @param   array  configuration
+	 * @return  void
+	 */
 	public function __construct(array $config = array())
 	{
 		if (isset($config['group']))
@@ -43,10 +55,18 @@ class Pagination_Core {
 		$this->config($config);
 	}
 
-	public function load_config($group = 'default')
+	/**
+	 * Loads a pagination config group from the config file. One config group can
+	 * refer to another as its parent, which will be recursively loaded.
+	 *
+	 * @param   string   name of the pagination config group
+	 * @param   boolean  enable caching
+	 * @return  array    configuration
+	 */
+	public function load_config($group = 'default', $cache = TRUE)
 	{
 		// Load the pagination config file (object)
-		$config_file = Kohana::config('pagination');
+		$config_file = Kohana::config('pagination', $cache);
 
 		// Initialize the $config array
 		$config['group'] = $group;
@@ -69,6 +89,14 @@ class Pagination_Core {
 		return $config;
 	}
 
+	/**
+	 * Loads configuration settings into the object and (re)calculates all
+	 * pagination variables.
+	 *
+	 * @chainable
+	 * @param   array  configuration
+	 * @return  Pagination
+	 */
 	public function config(array $config = array())
 	{
 		if (isset($config['group']))
@@ -106,41 +134,71 @@ class Pagination_Core {
 		return $this;
 	}
 
+	/**
+	 * Generates the full URL for a certain page.
+	 *
+	 * @param   integer  page number
+	 * @return  string   page URL
+	 */
 	public function url($page = 1)
 	{
 		// Clean the page number
 		$page = max(1, (int) $page);
 
-		// Generate the full URL for a certain page
+		// Generate the URL
 		return url::site($this->uri).url::query(array($this->query_string => $page));
 	}
 
-	public function render($view = NULL)
+	/**
+	 * Renders the pagination links.
+	 *
+	 * @param   string   view file to use; style
+	 * @param   boolean  hide pagination for single pages
+	 * @return  string   pagination output (HTML)
+	 */
+	public function render($view = NULL, $auto_hide = NULL)
 	{
+		// Possibly overload config settings
+		$view      = ($view === NULL) ? $this->view : $view;
+		$auto_hide = ($auto_hide === NULL) ? $this->auto_hide : $auto_hide;
+
 		// Automatically hide pagination whenever it is superfluous
-		if ($this->auto_hide === TRUE AND $this->total_pages < 2)
+		if ($auto_hide === TRUE AND $this->total_pages < 2)
 			return '';
 
-		// Use the view from config
-		if ($view === NULL)
-		{
-			$view = $this->view;
-		}
-
-		// Load the view file and pass on the whole pagination object
+		// Load the view file and pass on the whole Pagination object
 		return View::factory($view, get_object_vars($this))->set('page', $this)->render();
 	}
 
+	/**
+	 * Renders the pagination links.
+	 *
+	 * @return  string  pagination output (HTML)
+	 */
 	public function __toString()
 	{
 		return $this->render();
 	}
 
+	/**
+	 * Returns a Pagination property.
+	 *
+	 * @param   string  URI of the request
+	 * @return  mixed   Pagination property; NULL if not found
+	 */
 	public function __get($key)
 	{
 		return isset($this->$key) ? $this->$key : NULL;
 	}
 
+	/**
+	 * Updates a single config setting, and recalculates all pagination variables.
+	 * Setting multiple config items should be done via the config() method.
+	 *
+	 * @param   string  config key
+	 * @param   mixed   config value
+	 * @return  void
+	 */
 	public function __set($key, $value)
 	{
 		$this->config(array($key => $value));
