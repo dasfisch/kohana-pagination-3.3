@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
- * The Pagination class will create the pagination links for you;
+ * This Pagination class will create pagination links for you;
  * however, it won't touch the data you are paginating.
  *
  * @package    Kohana
@@ -23,23 +23,38 @@ class Pagination_Core {
 	protected $prev_page;
 	protected $next_page;
 
-	public static function factory(array $config = NULL)
+	public static function factory(array $config = array())
 	{
 		return new Pagination($config);
 	}
 
-	public function __construct(array $config = NULL)
+	public function __construct(array $config = array())
 	{
-		// Make sure $config is an array
-		$config = (array) $config;
+		if (isset($config['group']))
+		{
+			// Recursively load requested config groups
+			$config += $this->load_config($config['group']);
+		}
 
-		// Load the pagination config file once (object)
+		// Add default config values, not overwriting existing keys
+		$config += $this->load_config();
+
+		// Load config into object and calculate pagination variables
+		$this->config($config);
+	}
+
+	public function load_config($group = 'default')
+	{
+		// Load the pagination config file (object)
 		$config_file = Kohana::config('pagination');
 
-		// Recursively load any requested config groups
+		// Initialize the $config array
+		$config['group'] = $group;
+
+		// Recursively load requested config groups
 		while (isset($config['group']) AND isset($config_file->$config['group']))
 		{
-			// Transfer config group name
+			// Temporarily store config group name
 			$group = $config['group'];
 			unset($config['group']);
 
@@ -47,8 +62,20 @@ class Pagination_Core {
 			$config += $config_file->$group;
 		}
 
-		// Add default config values, not overwriting existing keys
-		$config += $config_file->default;
+		// Get rid of possible stray config group names
+		unset($config['group']);
+
+		// Return the $config array
+		return $config;
+	}
+
+	public function config(array $config = array())
+	{
+		if (isset($config['group']))
+		{
+			// Recursively load requested config groups
+			$config += $this->load_config($config['group']);
+		}
 
 		// Convert config array to object properties
 		foreach ($config as $key => $value)
@@ -56,16 +83,16 @@ class Pagination_Core {
 			$this->$key = $value;
 		}
 
-		// Use the current URI by default
 		if ($this->uri === NULL)
 		{
+			// Use the current URI by default
 			$this->uri = Request::instance()->uri;
 		}
 
 		// Grab the current page number from the URL
 		$this->current_page = isset($_GET[$this->query_string]) ? (int) $_GET[$this->query_string] : 1;
 
-		// Clean up and calculate page variables
+		// Clean up and calculate pagination variables
 		$this->total_items        = (int) max(0, $this->total_items);
 		$this->items_per_page     = (int) max(1, $this->items_per_page);
 		$this->total_pages        = (int) ceil($this->total_items / $this->items_per_page);
@@ -74,6 +101,9 @@ class Pagination_Core {
 		$this->current_last_item  = (int) min($this->current_first_item + $this->items_per_page - 1, $this->total_items);
 		$this->prev_page          = ($this->current_page > 1) ? $this->current_page - 1 : FALSE;
 		$this->next_page          = ($this->current_page < $this->total_pages) ? $this->current_page + 1 : FALSE;
+
+		// Chainable method
+		return $this;
 	}
 
 	public function url($page = 1)
@@ -109,6 +139,11 @@ class Pagination_Core {
 	public function __get($key)
 	{
 		return isset($this->$key) ? $this->$key : NULL;
+	}
+
+	public function __set($key, $value)
+	{
+		$this->config(array($key => $value));
 	}
 
 } // End Pagination
