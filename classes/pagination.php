@@ -93,7 +93,6 @@ class Pagination_Core {
 	 * Loads configuration settings into the object and (re)calculates all
 	 * pagination variables.
 	 *
-	 * @chainable
 	 * @param   array  configuration
 	 * @return  Pagination
 	 */
