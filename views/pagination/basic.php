@@ -1,5 +1,11 @@
 <p class="pagination">
 
+	<?php if ($first_page !== FALSE): ?>
+		<a href="<?php echo $page->url($first_page) ?>"><?php echo __('First') ?></a>
+	<?php else: ?>
+		<?php echo __('First') ?>
+	<?php endif ?>
+
 	<?php if ($prev_page !== FALSE): ?>
 		<a href="<?php echo $page->url($prev_page) ?>"><?php echo __('Previous') ?></a>
 	<?php else: ?>
@@ -20,6 +26,12 @@
 		<a href="<?php echo $page->url($next_page) ?>"><?php echo __('Next') ?></a>
 	<?php else: ?>
 		<?php echo __('Next') ?>
+	<?php endif ?>
+
+	<?php if ($last_page !== FALSE): ?>
+		<a href="<?php echo $page->url($last_page) ?>"><?php echo __('Last') ?></a>
+	<?php else: ?>
+		<?php echo __('Last') ?>
 	<?php endif ?>
 
 </p><!-- .pagination -->

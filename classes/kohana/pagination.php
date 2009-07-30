@@ -1,7 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
- * This Pagination class will create pagination links for you;
- * however, it won't touch the data you are paginating.
+ * Pagination links generator.
  *
  * @package    Kohana
  * @author     Kohana Team
@@ -22,6 +21,8 @@ class Kohana_Pagination {
 	protected $current_last_item;
 	protected $prev_page;
 	protected $next_page;
+	protected $first_page;
+	protected $last_page;
 
 	/**
 	 * Creates a new Pagination object.
@@ -116,18 +117,24 @@ class Kohana_Pagination {
 			$this->uri = Request::instance()->uri;
 		}
 
-		// Grab the current page number from the URL
-		$this->current_page = isset($_GET[$this->query_string]) ? (int) $_GET[$this->query_string] : 1;
+		// Only (re)calculate pagination when needed
+		if (isset($config['query_string']) OR isset($config['total_items']) OR isset($config['items_per_page']))
+		{
+			// Grab the current page number from the URL
+			$this->current_page = isset($_GET[$this->query_string]) ? (int) $_GET[$this->query_string] : 1;
 
-		// Clean up and calculate pagination variables
-		$this->total_items        = (int) max(0, $this->total_items);
-		$this->items_per_page     = (int) max(1, $this->items_per_page);
-		$this->total_pages        = (int) ceil($this->total_items / $this->items_per_page);
-		$this->current_page       = (int) min(max(1, $this->current_page), max(1, $this->total_pages));
-		$this->current_first_item = (int) min((($this->current_page - 1) * $this->items_per_page) + 1, $this->total_items);
-		$this->current_last_item  = (int) min($this->current_first_item + $this->items_per_page - 1, $this->total_items);
-		$this->prev_page          = ($this->current_page > 1) ? $this->current_page - 1 : FALSE;
-		$this->next_page          = ($this->current_page < $this->total_pages) ? $this->current_page + 1 : FALSE;
+			// Clean up and calculate pagination variables
+			$this->total_items        = (int) max(0, $this->total_items);
+			$this->items_per_page     = (int) max(1, $this->items_per_page);
+			$this->total_pages        = (int) ceil($this->total_items / $this->items_per_page);
+			$this->current_page       = (int) min(max(1, $this->current_page), max(1, $this->total_pages));
+			$this->current_first_item = (int) min((($this->current_page - 1) * $this->items_per_page) + 1, $this->total_items);
+			$this->current_last_item  = (int) min($this->current_first_item + $this->items_per_page - 1, $this->total_items);
+			$this->prev_page          = ($this->current_page > 1) ? $this->current_page - 1 : FALSE;
+			$this->next_page          = ($this->current_page < $this->total_pages) ? $this->current_page + 1 : FALSE;
+			$this->first_page         = ($this->current_page === 1) ? FALSE : 1;
+			$this->last_page          = ($this->current_page >= $this->total_pages) ? FALSE : $this->total_pages;
+		}
 
 		// Chainable method
 		return $this;
@@ -191,8 +198,7 @@ class Kohana_Pagination {
 	}
 
 	/**
-	 * Updates a single config setting, and recalculates all pagination variables.
-	 * Setting multiple config items should be done via the config() method.
+	 * Updates a single config setting, and recalculates pagination if needed.
 	 *
 	 * @param   string  config key
 	 * @param   mixed   config value
