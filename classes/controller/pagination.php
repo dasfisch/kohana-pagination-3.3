@@ -9,25 +9,22 @@ class Controller_Pagination extends Controller {
 		))->render();
 
 		$demo[] = Pagination::factory(array(
+			'current_page'   => array('source' => 'route', 'key' => 'page'),
 			'total_items'    => 193,
 			'items_per_page' => 20,
-			'query_string'   => 'p2',
-			'uri'            => 'pagination',
 		))->render();
 
 		$demo[] = Pagination::factory(array(
-			'total_items'    => 51,
-			'query_string'   => 'p3',
-			'uri'            => 'pagination/index',
+			'current_page'   => array('source' => 'query', 'key' => 'other_pagenr'),
+			'total_items'    => 61,
 		))->render();
 
 		$demo[] = Pagination::factory(array(
 			'total_items'    => 8,
-			'query_string'   => 'p4',
 			'auto_hide'      => FALSE,
 		))->render();
 
-		$this->request->response = '<h1>Pagination demos <a href="'.url::site($this->request->uri).'">[reset]</a></h1>'.implode('', $demo);
+		$this->request->response = '<h1>Pagination demos — <a href="'.URL::site($this->request->controller).'">reset</a></h1>'.implode('', $demo);
 	}
 
 }

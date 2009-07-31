@@ -9,14 +9,19 @@
  */
 class Kohana_Pagination {
 
-	protected $uri;
-	protected $view;
-	protected $auto_hide;
-	protected $query_string;
-	protected $items_per_page;
-	protected $total_items;
-	protected $total_pages;
+	// System defaults
+	protected $config = array(
+		'current_page'   => array('source' => 'query', 'key' => 'page'),
+		'total_items'    => 0,
+		'items_per_page' => 10,
+		'view'           => 'pagination/basic',
+		'auto_hide'      => TRUE,
+	);
+
 	protected $current_page;
+	protected $total_items;
+	protected $items_per_page;
+	protected $total_pages;
 	protected $current_first_item;
 	protected $current_last_item;
 	protected $prev_page;
@@ -43,34 +48,27 @@ class Kohana_Pagination {
 	 */
 	public function __construct(array $config = array())
 	{
-		if (isset($config['group']))
-		{
-			// Recursively load requested config groups
-			$config += $this->load_config($config['group']);
-		}
+		// Overwrite system defaults with application defaults
+		$this->config = array_merge($this->config, $this->config_group());
 
-		// Add default config values, not overwriting existing keys
-		$config += $this->load_config();
-
-		// Load config into object and calculate pagination variables
-		$this->config($config);
+		// Pagination setup
+		$this->setup($config);
 	}
 
 	/**
-	 * Loads a pagination config group from the config file. One config group can
+	 * Retrieves a pagination config group from the config file. One config group can
 	 * refer to another as its parent, which will be recursively loaded.
 	 *
-	 * @param   string   name of the pagination config group
-	 * @param   boolean  enable caching
-	 * @return  array    configuration
+	 * @param   string  pagination config group; "default" if none given
+	 * @return  array   config settings
 	 */
-	public function load_config($group = 'default', $cache = TRUE)
+	public function config_group($group = 'default')
 	{
-		// Load the pagination config file (object)
-		$config_file = Kohana::config('pagination', $cache);
+		// Load the pagination config file
+		$config_file = Kohana::config('pagination');
 
 		// Initialize the $config array
-		$config['group'] = $group;
+		$config['group'] = (string) $group;
 
 		// Recursively load requested config groups
 		while (isset($config['group']) AND isset($config_file->$config['group']))
@@ -92,40 +90,50 @@ class Kohana_Pagination {
 
 	/**
 	 * Loads configuration settings into the object and (re)calculates all
-	 * pagination variables.
+	 * pagination variables if needed.
+	 * You can call this method to update any config settings after the object has
+	 * already been created.
 	 *
-	 * @param   array  configuration
-	 * @return  Pagination
+	 * @param   array   configuration
+	 * @return  object  Pagination
 	 */
-	public function config(array $config = array())
+	public function setup(array $config = array())
 	{
 		if (isset($config['group']))
 		{
 			// Recursively load requested config groups
-			$config += $this->load_config($config['group']);
+			$config += $this->config_group($config['group']);
 		}
 
-		// Convert config array to object properties
-		foreach ($config as $key => $value)
-		{
-			$this->$key = $value;
-		}
+		// Overwrite the current config settings
+		$this->config = array_merge($this->config, $config);
 
-		if ($this->uri === NULL)
+		// Retrieve the current page number
+		if (isset($config['current_page']))
 		{
-			// Use the current URI by default
-			$this->uri = Request::instance()->uri;
+			switch ($this->config['current_page']['source'])
+			{
+				case 'query':
+					$this->current_page = isset($_GET[$this->config['current_page']['key']])
+						? (int) $_GET[$this->config['current_page']['key']]
+						: 1;
+					break;
+
+				case 'route':
+					$this->current_page = (int) Request::instance()->param($this->config['current_page']['key'], 1);
+					break;
+
+				default:
+					$this->current_page = 1;
+			}
 		}
 
 		// Only (re)calculate pagination when needed
-		if (isset($config['query_string']) OR isset($config['total_items']) OR isset($config['items_per_page']))
+		if (isset($config['current_page']) OR isset($config['total_items']) OR isset($config['items_per_page']))
 		{
-			// Grab the current page number from the URL
-			$this->current_page = isset($_GET[$this->query_string]) ? (int) $_GET[$this->query_string] : 1;
-
-			// Clean up and calculate pagination variables
-			$this->total_items        = (int) max(0, $this->total_items);
-			$this->items_per_page     = (int) max(1, $this->items_per_page);
+			// Calculate and clean all pagination variables
+			$this->total_items        = (int) max(0, $this->config['total_items']);
+			$this->items_per_page     = (int) max(1, $this->config['items_per_page']);
 			$this->total_pages        = (int) ceil($this->total_items / $this->items_per_page);
 			$this->current_page       = (int) min(max(1, $this->current_page), max(1, $this->total_pages));
 			$this->current_first_item = (int) min((($this->current_page - 1) * $this->items_per_page) + 1, $this->total_items);
@@ -151,26 +159,35 @@ class Kohana_Pagination {
 		// Clean the page number
 		$page = max(1, (int) $page);
 
-		// Generate the URL
-		return URL::site($this->uri).URL::query(array($this->query_string => $page));
+		switch ($this->config['current_page']['source'])
+		{
+			case 'query':
+				return URL::site(Request::instance()->uri).URL::query(array($this->config['current_page']['key'] => $page));
+
+			case 'route':
+				return URL::site(Request::instance()->uri(array($this->config['current_page']['key'] => $page))).URL::query();
+		}
+
+		return '#';
 	}
 
 	/**
 	 * Renders the pagination links.
 	 *
-	 * @param   string   view file to use; style
-	 * @param   boolean  hide pagination for single pages
-	 * @return  string   pagination output (HTML)
+	 * @param   string  view file to use; overrides config view setting
+	 * @return  string  pagination output (HTML)
 	 */
-	public function render($view = NULL, $auto_hide = NULL)
+	public function render($view = NULL)
 	{
-		// Possibly overload config settings
-		$view      = ($view === NULL) ? $this->view : $view;
-		$auto_hide = ($auto_hide === NULL) ? $this->auto_hide : $auto_hide;
-
 		// Automatically hide pagination whenever it is superfluous
-		if ($auto_hide === TRUE AND $this->total_pages < 2)
+		if ($this->config['auto_hide'] === TRUE AND $this->total_pages <= 1)
 			return '';
+
+		if ($view === NULL)
+		{
+			// Use the view from config
+			$view = $this->config['view'];
+		}
 
 		// Load the view file and pass on the whole Pagination object
 		return View::factory($view, get_object_vars($this))->set('page', $this)->render();
@@ -206,7 +223,7 @@ class Kohana_Pagination {
 	 */
 	public function __set($key, $value)
 	{
-		$this->config(array($key => $value));
+		$this->setup(array($key => $value));
 	}
 
 } // End Pagination

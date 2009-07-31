@@ -2,13 +2,13 @@
 
 return array(
 
+	// Application defaults
 	'default' => array(
-		'uri'            => NULL,
+		'current_page'   => array('source' => 'query', 'key' => 'page'), // source: "query" or "route"
+		'total_items'    => 0,
+		'items_per_page' => 10,
 		'view'           => 'pagination/basic',
 		'auto_hide'      => TRUE,
-		'query_string'   => 'page',
-		'items_per_page' => 10,
-		'total_items'    => 0,
 	),
 
 );
