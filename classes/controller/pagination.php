@@ -15,7 +15,7 @@ class Controller_Pagination extends Controller {
 		))->render();
 
 		$demo[] = Pagination::factory(array(
-			'current_page'   => array('source' => 'query', 'key' => 'other_pagenr'),
+			'current_page'   => array('source' => 'query_string', 'key' => 'other_pagenr'),
 			'total_items'    => 61,
 		))->render();
 

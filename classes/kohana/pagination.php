@@ -11,7 +11,7 @@ class Kohana_Pagination {
 
 	// System defaults
 	protected $config = array(
-		'current_page'   => array('source' => 'query', 'key' => 'page'),
+		'current_page'   => array('source' => 'query_string', 'key' => 'page'),
 		'total_items'    => 0,
 		'items_per_page' => 10,
 		'view'           => 'pagination/basic',
@@ -117,7 +117,7 @@ class Kohana_Pagination {
 			// Retrieve the current page number
 			switch ($this->config['current_page']['source'])
 			{
-				case 'query':
+				case 'query_string':
 					$this->current_page = isset($_GET[$this->config['current_page']['key']])
 						? (int) $_GET[$this->config['current_page']['key']]
 						: 1;
@@ -158,7 +158,7 @@ class Kohana_Pagination {
 
 		switch ($this->config['current_page']['source'])
 		{
-			case 'query':
+			case 'query_string':
 				return URL::site(Request::instance()->uri).URL::query(array($this->config['current_page']['key'] => $page));
 
 			case 'route':
