@@ -37,7 +37,7 @@ class Kohana_Pagination {
 	protected $current_last_item;
 
 	// Previous page number; FALSE if the current page is the first one
-	protected $prev_page;
+	protected $previous_page;
 
 	// Next page number; FALSE if the current page is the last one
 	protected $next_page;
@@ -152,7 +152,7 @@ class Kohana_Pagination {
 			$this->current_page       = (int) min(max(1, $this->current_page), max(1, $this->total_pages));
 			$this->current_first_item = (int) min((($this->current_page - 1) * $this->items_per_page) + 1, $this->total_items);
 			$this->current_last_item  = (int) min($this->current_first_item + $this->items_per_page - 1, $this->total_items);
-			$this->prev_page          = ($this->current_page > 1) ? $this->current_page - 1 : FALSE;
+			$this->previous_page      = ($this->current_page > 1) ? $this->current_page - 1 : FALSE;
 			$this->next_page          = ($this->current_page < $this->total_pages) ? $this->current_page + 1 : FALSE;
 			$this->first_page         = ($this->current_page === 1) ? FALSE : 1;
 			$this->last_page          = ($this->current_page >= $this->total_pages) ? FALSE : $this->total_pages;

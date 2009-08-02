@@ -6,8 +6,8 @@
 		<?php echo __('First') ?>
 	<?php endif ?>
 
-	<?php if ($prev_page !== FALSE): ?>
-		<a href="<?php echo $page->url($prev_page) ?>"><?php echo __('Previous') ?></a>
+	<?php if ($previous_page !== FALSE): ?>
+		<a href="<?php echo $page->url($previous_page) ?>"><?php echo __('Previous') ?></a>
 	<?php else: ?>
 		<?php echo __('Previous') ?>
 	<?php endif ?>
