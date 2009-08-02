@@ -49,7 +49,7 @@ class Kohana_Pagination {
 	public function __construct(array $config = array())
 	{
 		// Overwrite system defaults with application defaults
-		$this->config = array_merge($this->config, $this->config_group());
+		$this->config = $this->config_group() + $this->config;
 
 		// Pagination setup
 		$this->setup($config);
@@ -106,7 +106,7 @@ class Kohana_Pagination {
 		}
 
 		// Overwrite the current config settings
-		$this->config = array_merge($this->config, $config);
+		$this->config = $config + $this->config;
 
 		// Only (re)calculate pagination when needed
 		if ($this->current_page === NULL
