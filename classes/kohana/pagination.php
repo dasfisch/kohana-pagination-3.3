@@ -108,9 +108,13 @@ class Kohana_Pagination {
 		// Overwrite the current config settings
 		$this->config = array_merge($this->config, $config);
 
-		// Retrieve the current page number
-		if (isset($config['current_page']))
+		// Only (re)calculate pagination when needed
+		if ($this->current_page === NULL
+			OR isset($config['current_page'])
+			OR isset($config['total_items'])
+			OR isset($config['items_per_page']))
 		{
+			// Retrieve the current page number
 			switch ($this->config['current_page']['source'])
 			{
 				case 'query':
@@ -122,15 +126,8 @@ class Kohana_Pagination {
 				case 'route':
 					$this->current_page = (int) Request::instance()->param($this->config['current_page']['key'], 1);
 					break;
-
-				default:
-					$this->current_page = 1;
 			}
-		}
 
-		// Only (re)calculate pagination when needed
-		if (isset($config['current_page']) OR isset($config['total_items']) OR isset($config['items_per_page']))
-		{
 			// Calculate and clean all pagination variables
 			$this->total_items        = (int) max(0, $this->config['total_items']);
 			$this->items_per_page     = (int) max(1, $this->config['items_per_page']);
