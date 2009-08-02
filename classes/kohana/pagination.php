@@ -9,7 +9,7 @@
  */
 class Kohana_Pagination {
 
-	// System defaults
+	// Merged configuration settings
 	protected $config = array(
 		'current_page'   => array('source' => 'query_string', 'key' => 'page'),
 		'total_items'    => 0,
@@ -18,15 +18,34 @@ class Kohana_Pagination {
 		'auto_hide'      => TRUE,
 	);
 
+	// Current page number
 	protected $current_page;
+
+	// Total item count
 	protected $total_items;
+
+	// How many items to show per page
 	protected $items_per_page;
+
+	// Total page count
 	protected $total_pages;
+
+	// Item offset for the first item displayed on the current page
 	protected $current_first_item;
+
+	// Item offset for the last item displayed on the current page
 	protected $current_last_item;
+
+	// Previous page number; FALSE if the current page is the first one
 	protected $prev_page;
+
+	// Next page number; FALSE if the current page is the last one
 	protected $next_page;
+
+	// First page number; FALSE if the current page is the first one
 	protected $first_page;
+
+	// Last page number; FALSE if the current page is the last one
 	protected $last_page;
 
 	/**
@@ -84,15 +103,13 @@ class Kohana_Pagination {
 		// Get rid of possible stray config group names
 		unset($config['group']);
 
-		// Return the $config array
+		// Return the merged config group settings
 		return $config;
 	}
 
 	/**
-	 * Loads configuration settings into the object and (re)calculates all
-	 * pagination variables if needed.
-	 * You can call this method to update any config settings after the object has
-	 * already been created.
+	 * Loads configuration settings into the object and (re)calculates pagination if needed.
+	 * Allows you to update config settings after a Pagination object has been constructed.
 	 *
 	 * @param   array   configuration
 	 * @return  object  Pagination
