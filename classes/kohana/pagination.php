@@ -159,12 +159,12 @@ class Kohana_Pagination {
 			$this->next_page          = ($this->current_page < $this->total_pages) ? $this->current_page + 1 : FALSE;
 			$this->first_page         = ($this->current_page === 1) ? FALSE : 1;
 			$this->last_page          = ($this->current_page >= $this->total_pages) ? FALSE : $this->total_pages;
-			$this->offset			  = (int) (($this->items_per_page * $this->current_page) - $this->items_per_page);
+			$this->offset             = (int) (($this->current_page - 1) * $this->items_per_page);
 		}
 
 		// Chainable method
 		return $this;
-	} 
+	}
 
 	/**
 	 * Generates the full URL for a certain page.
