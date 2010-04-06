@@ -192,7 +192,7 @@ class Kohana_Pagination {
 	/**
 	 * Renders the pagination links.
 	 *
-	 * @param   string  view file to use; overrides config view setting
+	 * @param   mixed   string of the view to use, or a Kohana_View object
 	 * @return  string  pagination output (HTML)
 	 */
 	public function render($view = NULL)
@@ -207,8 +207,14 @@ class Kohana_Pagination {
 			$view = $this->config['view'];
 		}
 
-		// Load the view file and pass on the whole Pagination object
-		return View::factory($view, get_object_vars($this))->set('page', $this)->render();
+		if ( ! $view instanceof Kohana_View)
+		{
+			// Load the view file
+			$view = View::factory($view);
+		}
+
+		// Pass on the whole Pagination object
+		return $view->set(get_object_vars($this))->set('page', $this)->render();
 	}
 
 	/**
