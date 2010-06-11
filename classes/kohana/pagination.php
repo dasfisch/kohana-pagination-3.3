@@ -197,6 +197,22 @@ class Kohana_Pagination {
 	}
 
 	/**
+	 * Checks whether the given page number exists.
+	 *
+	 * @param   integer  page number
+	 * @return  boolean
+	 * @since   3.0.7
+	 */
+	public function valid_page($page)
+	{
+		// Page number has to be a clean integer
+		if ( ! Validate::digit($page))
+			return FALSE;
+
+		return $page > 0 AND $page <= $this->total_pages;
+	}
+
+	/**
 	 * Renders the pagination links.
 	 *
 	 * @param   mixed   string of the view to use, or a Kohana_View object
