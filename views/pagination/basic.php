@@ -29,7 +29,7 @@
 	<?php endif ?>
 
 	<?php if ($last_page !== FALSE): ?>
-		<a href="<?php echo $page->url($last_page) ?>"><?php echo __('Last') ?></a>
+		<a href="<?php echo $page->url($last_page) ?>" rel="last"><?php echo __('Last') ?></a>
 	<?php else: ?>
 		<?php echo __('Last') ?>
 	<?php endif ?>
