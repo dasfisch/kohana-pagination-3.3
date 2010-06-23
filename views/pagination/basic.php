@@ -1,7 +1,7 @@
 <p class="pagination">
 
 	<?php if ($first_page !== FALSE): ?>
-		<a href="<?php echo $page->url($first_page) ?>" rel="start"><?php echo __('First') ?></a>
+		<a href="<?php echo $page->url($first_page) ?>" rel="first"><?php echo __('First') ?></a>
 	<?php else: ?>
 		<?php echo __('First') ?>
 	<?php endif ?>
