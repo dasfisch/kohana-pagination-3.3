@@ -187,7 +187,7 @@ class Kohana_Pagination {
 		$page = max(1, (int) $page);
 
 		// No page number in URLs to first page
-		if ($page === 1)
+		if ($page === 1 AND ! $this->config['first_page_in_url'])
 		{
 			$page = NULL;
 		}
