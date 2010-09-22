@@ -12,11 +12,12 @@ class Kohana_Pagination {
 
 	// Merged configuration settings
 	protected $config = array(
-		'current_page'   => array('source' => 'query_string', 'key' => 'page'),
-		'total_items'    => 0,
-		'items_per_page' => 10,
-		'view'           => 'pagination/basic',
-		'auto_hide'      => TRUE,
+		'current_page'      => array('source' => 'query_string', 'key' => 'page'),
+		'total_items'       => 0,
+		'items_per_page'    => 10,
+		'view'              => 'pagination/basic',
+		'auto_hide'         => TRUE,
+		'first_page_in_url' => FALSE,
 	);
 
 	// Current page number
