@@ -52,6 +52,15 @@ class Kohana_Pagination {
 
 	// Query offset
 	protected $offset;
+	
+	// Request object
+	protected $_request;
+	
+	// Route to use for URIs
+	protected $_route;
+	
+	// Parameters to use with Route to create URIs
+	protected $_route_params = array();
 
 	/**
 	 * Creates a new Pagination object.
@@ -59,9 +68,9 @@ class Kohana_Pagination {
 	 * @param   array  configuration
 	 * @return  Pagination
 	 */
-	public static function factory(array $config = array())
+	public static function factory(array $config = array(), Request $request = NULL)
 	{
-		return new Pagination($config);
+		return new Pagination($config, $request);
 	}
 
 	/**
@@ -69,12 +78,18 @@ class Kohana_Pagination {
 	 *
 	 * @param   array  configuration
 	 * @return  void
+	 * @todo	Assign Request::current() instead in 3.2
 	 */
-	public function __construct(array $config = array())
+	public function __construct(array $config = array(), Request $request = NULL)
 	{
 		// Overwrite system defaults with application defaults
 		$this->config = $this->config_group() + $this->config;
+		
+		// Assing Request
+		$this->_request = ($request === NULL) ? Request::current() : $request;
 
+		$this->_route = $this->_request->route();
+		
 		// Pagination setup
 		$this->setup($config);
 	}
@@ -89,7 +104,7 @@ class Kohana_Pagination {
 	public function config_group($group = 'default')
 	{
 		// Load the pagination config file
-		$config_file = Kohana::config('pagination');
+		$config_file = Kohana::$config->load('pagination');
 
 		// Initialize the $config array
 		$config['group'] = (string) $group;
@@ -144,16 +159,18 @@ class Kohana_Pagination {
 			}
 			else
 			{
+				$query_key = $this->config['current_page']['key'];
+						
 				switch ($this->config['current_page']['source'])
 				{
 					case 'query_string':
-						$this->current_page = isset($_GET[$this->config['current_page']['key']])
-							? (int) $_GET[$this->config['current_page']['key']]
+						$this->current_page = ($this->_request->query($query_key) !== NULL)
+							? (int) $this->_request->query($query_key)
 							: 1;
 						break;
 
 					case 'route':
-						$this->current_page = (int) Request::current()->param($this->config['current_page']['key'], 1);
+						$this->current_page = (int) $this->_request->param($query_key, 1);
 						break;
 				}
 			}
@@ -196,10 +213,16 @@ class Kohana_Pagination {
 		switch ($this->config['current_page']['source'])
 		{
 			case 'query_string':
-				return URL::site(Request::current()->uri).URL::query(array($this->config['current_page']['key'] => $page));
+				return URL::site($this->_route->uri(
+					$this->_route_params + 
+					array('action' => $this->_request->action())).URL::query(
+					array($this->config['current_page']['key'] => $page), $this->_request));
 
 			case 'route':
-				return URL::site(Request::current()->uri(array($this->config['current_page']['key'] => $page))).URL::query();
+				return URL::site($this->_route->uri(
+					$this->_route_params + 
+					array('action' => $this->_request->action(),
+					$this->config['current_page']['key'] => $page)).URL::query(NULL, $this->_request));
 		}
 
 		return '#';
@@ -215,7 +238,7 @@ class Kohana_Pagination {
 	public function valid_page($page)
 	{
 		// Page number has to be a clean integer
-		if ( ! Validate::digit($page))
+		if ( ! Valid::digit($page))
 			return FALSE;
 
 		return $page > 0 AND $page <= $this->total_pages;
@@ -239,7 +262,7 @@ class Kohana_Pagination {
 			$view = $this->config['view'];
 		}
 
-		if ( ! $view instanceof Kohana_View)
+		if ( ! $view instanceof View)
 		{
 			// Load the view file
 			$view = View::factory($view);
@@ -247,6 +270,36 @@ class Kohana_Pagination {
 
 		// Pass on the whole Pagination object
 		return $view->set(get_object_vars($this))->set('page', $this)->render();
+	}
+	
+	public function request(Request $request = NULL)
+	{
+		if ($request === NULL)
+			return $this->_request;
+			
+		$this->_request = $request;
+		
+		return $this;
+	}
+	
+	public function route(Route $route = NULL)
+	{
+		if ($route === NULL)
+			return $this->_route;
+			
+		$this->_route = $route;
+		
+		return $this;
+	}
+	
+	public function route_params(array $route_params = NULL)
+	{
+		if ($route_params === NULL)
+			return $this->_route_params;
+			
+		$this->_route_params = $route_params;
+		
+		return $this;
 	}
 
 	/**
@@ -256,13 +309,21 @@ class Kohana_Pagination {
 	 */
 	public function __toString()
 	{
-		return $this->render();
+		try
+		{
+			return $this->render();
+		}
+		catch(Exception $e)
+		{
+			Kohana_Exception::handler($e);
+			return '';
+		}
 	}
 
 	/**
 	 * Returns a Pagination property.
 	 *
-	 * @param   string  URI of the request
+	 * @param   string  property name
 	 * @return  mixed   Pagination property; NULL if not found
 	 */
 	public function __get($key)
