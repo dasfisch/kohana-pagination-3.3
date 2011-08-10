@@ -213,16 +213,15 @@ class Kohana_Pagination {
 		switch ($this->config['current_page']['source'])
 		{
 			case 'query_string':
-				return URL::site($this->_route->uri(
-					$this->_route_params + 
-					array('action' => $this->_request->action())).URL::query(
-					array($this->config['current_page']['key'] => $page), $this->_request));
+			
+				return URL::site($this->_route->uri($this->_route_params).
+					$this->query(array($this->config['current_page']['key'] => $page)));
 
 			case 'route':
-				return URL::site($this->_route->uri(
-					$this->_route_params + 
-					array('action' => $this->_request->action(),
-					$this->config['current_page']['key'] => $page)).URL::query(NULL, $this->_request));
+			
+				return URL::site($this->_route->uri($this->_route_params + 
+					array($this->config['current_page']['key'] => $page)).
+					$this->query());
 		}
 
 		return '#';
@@ -272,6 +271,15 @@ class Kohana_Pagination {
 		return $view->set(get_object_vars($this))->set('page', $this)->render();
 	}
 	
+	
+	/**
+	 * Route setter / getter
+	 * 
+	 * @note	This doesn't change the initial Route
+	 * @param	Route
+	 * @return	Route	Route if used as getter
+	 * @return	$this	Chainable as setter
+	 */
 	public function request(Request $request = NULL)
 	{
 		if ($request === NULL)
@@ -282,6 +290,13 @@ class Kohana_Pagination {
 		return $this;
 	}
 	
+	/**
+	 * Route setter / getter
+	 * 
+	 * @param	Route
+	 * @return	Route	Route if used as getter
+	 * @return	$this	Chainable as setter
+	 */
 	public function route(Route $route = NULL)
 	{
 		if ($route === NULL)
@@ -292,6 +307,13 @@ class Kohana_Pagination {
 		return $this;
 	}
 	
+	/**
+	 * Route parameters setter / getter
+	 * 
+	 * @param	array	Route parameters to set
+	 * @return	array	Route parameters if used as getter
+	 * @return	$this	Chainable as setter
+	 */
 	public function route_params(array $route_params = NULL)
 	{
 		if ($route_params === NULL)
@@ -300,6 +322,38 @@ class Kohana_Pagination {
 		$this->_route_params = $route_params;
 		
 		return $this;
+	}
+	
+	/**
+	 * URL::query() replacement for Pagination use only
+	 * 
+	 * @param	array	Parameters to override
+	 * @return	string
+	 */
+	public function query(array $params = NULL)
+	{
+		if ($params === NULL)
+		{
+			// Use only the current parameters
+			$params = $this->_request->query();
+		}
+		else
+		{
+			// Merge the current and new parameters
+			$params = array_merge($this->_request->query(), $params);
+		}
+		
+		if (empty($params))
+		{
+			// No query parameters
+			return '';
+		}
+		
+		// Note: http_build_query returns an empty string for a params array with only NULL values
+		$query = http_build_query($params, '', '&');
+		
+		// Don't prepend '?' to an empty string
+		return ($query === '') ? '' : ('?'.$query);
 	}
 
 	/**
