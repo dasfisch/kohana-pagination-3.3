@@ -78,7 +78,6 @@ class Kohana_Pagination {
 	 *
 	 * @param   array  configuration
 	 * @return  void
-	 * @todo	Assign Request::current() instead in 3.2
 	 */
 	public function __construct(array $config = array(), Request $request = NULL)
 	{
@@ -86,9 +85,18 @@ class Kohana_Pagination {
 		$this->config = $this->config_group() + $this->config;
 		
 		// Assing Request
-		$this->_request = ($request === NULL) ? Request::current() : $request;
+		if ($request === NULL)
+		{
+			$request = Request::current();
+		}
+		
+		$this->_request = $request;
 
-		$this->_route = $this->_request->route();
+		// Assign default Route
+		$this->_route = $request->route();
+		
+		// Assign default route params
+		$this->_route_params = $request->param();
 		
 		// Pagination setup
 		$this->setup($config);
