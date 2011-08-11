@@ -281,11 +281,10 @@ class Kohana_Pagination {
 	
 	
 	/**
-	 * Route setter / getter
+	 * Request setter / getter
 	 * 
-	 * @note	This doesn't change the initial Route
-	 * @param	Route
-	 * @return	Route	Route if used as getter
+	 * @param	Request
+	 * @return	Request	If used as getter
 	 * @return	$this	Chainable as setter
 	 */
 	public function request(Request $request = NULL)
