@@ -227,9 +227,8 @@ class Kohana_Pagination {
 
 			case 'route':
 			
-				return URL::site($this->_route->uri($this->_route_params + 
-					array($this->config['current_page']['key'] => $page)).
-					$this->query());
+				return URL::site($this->_route->uri(array_merge($this->_route_params, 
+					array($this->config['current_page']['key'] => $page))).$this->query());
 		}
 
 		return '#';
